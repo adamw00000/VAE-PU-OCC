@@ -1,0 +1,11 @@
+__pycache__/
+env/
+pu_data/
+result/
+data/
+wyniki.zip
+processed_results/
+datasets_preprocessing/
+plots/
+*.png
+*.h5
