@@ -1,0 +1,3 @@
+[console_scripts]
+sarpu = sarpu.__main__:main
+

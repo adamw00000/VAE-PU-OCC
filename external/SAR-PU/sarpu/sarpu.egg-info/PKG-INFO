@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: sarpu
+Version: 0.0.1
+Summary: Package for learning from Positive and Unlabeled data under the SAR assumption
+Home-page: https://github.com/mlresearch/sarpu
+Author: Jessa Bekker
+Author-email: jessa.bekker@gmail.com
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+UNKNOWN
+

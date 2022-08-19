@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: tice
+Version: 0.0.1
+Summary: Package for estimating the class prior from Positive and Unlabeled data under the SAR assumption
+Home-page: https://github.com/mlresearch/tice
+Author: Jessa Bekker
+Author-email: jessa.bekker@gmail.com
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+
+UNKNOWN
+
