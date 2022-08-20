@@ -1,6 +1,6 @@
 {
-    "start_exp_idx": 6666,
-    "num_experiments": 1,
+    "start_exp_idx": 0,
+    "num_experiments": 10,
     "label_frequencies": [0.7, 0.5, 0.3, 0.1, 0.02],
     "device": "auto",
     
