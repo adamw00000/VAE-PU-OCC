@@ -3,7 +3,6 @@ import torch
 import os
 import numpy as np
 import numba as nb
-from datasets import load_dataset
 from torchvision.datasets import MNIST, CIFAR10, STL10
 from data_loading.small_dataset_wrapper import DATASET_NAMES, get_small_dataset
 

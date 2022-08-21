@@ -9,10 +9,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 root = 'result'
-
 results = []
 
 for dataset in os.listdir(root):
+    if dataset == '.gitkeep':
+        continue
+    
     for c in os.listdir(os.path.join(root, dataset)):
         if c.startswith('Exp'):
             continue
@@ -141,7 +143,7 @@ def process_results(df_name, min_exp, max_exp, methods_filter, dataset_filter, g
     processed_results_counts = processed_results \
         .groupby(grouping_cols) \
         .size()
-    display(processed_results_counts)
+    # display(processed_results_counts)
     
     if 'IsNotBaseline' in processed_results_mean.index.names:
         processed_results_mean.index = processed_results_mean.index.droplevel('IsNotBaseline')
@@ -285,9 +287,9 @@ def process_results(df_name, min_exp, max_exp, methods_filter, dataset_filter, g
 # process_results(df_name, min_exp, max_exp, methods_filter, dataset_filter, grouping_cols, result_cols, plot_results=False)
 
 df_name = 'MNIST 3v5 Results -- No-SCAR'
-min_exp, max_exp = 0, 10
+min_exp, max_exp = 0, None
 methods_filter = ['Baseline', 'Baseline (orig)', 'OC-SVM', 'IsolationForest', 'ECODv2', r'$A^3$', 'EM']
-dataset_filter = ['MNIST 3v5']
+dataset_filter = 'MNIST 3v5'
 grouping_cols = ['c', 'Method']
 result_cols = ['Accuracy', 'Precision', 'Recall', 'F1 score']
 multicolumn = True
@@ -296,9 +298,9 @@ multicolumn = True
 process_results(df_name, min_exp, max_exp, methods_filter, dataset_filter, grouping_cols, result_cols, multicolumn=multicolumn)
 
 df_name = 'MNIST OvE Results -- No-SCAR'
-min_exp, max_exp = 0, 10
+min_exp, max_exp = 0, None
 methods_filter = ['Baseline', 'Baseline (orig)', 'OC-SVM', 'IsolationForest', 'ECODv2', r'$A^3$', 'EM']
-dataset_filter = ['MNIST OvE']
+dataset_filter = 'MNIST OvE'
 grouping_cols = ['c', 'Method']
 # result_cols = ['Accuracy', 'Precision', 'Recall', 'F1 score']
 result_cols = ['Accuracy', 'F1 score']
@@ -306,9 +308,9 @@ result_cols = ['Accuracy', 'F1 score']
 process_results(df_name, min_exp, max_exp, methods_filter, dataset_filter, grouping_cols, result_cols)
 
 df_name = 'CIFAR CarTruck Results -- No-SCAR'
-min_exp, max_exp = 0, 10
+min_exp, max_exp = 0, None
 methods_filter = ['Baseline', 'Baseline (orig)', 'OC-SVM', 'IsolationForest', 'ECODv2', r'$A^3$', 'EM']
-dataset_filter = ['CIFAR CarTruck']
+dataset_filter = 'CIFAR CarTruck'
 grouping_cols = ['c', 'Method']
 # result_cols = ['Accuracy', 'Precision', 'Recall', 'F1 score']
 result_cols = ['Accuracy', 'F1 score']
@@ -316,9 +318,9 @@ result_cols = ['Accuracy', 'F1 score']
 process_results(df_name, min_exp, max_exp, methods_filter, dataset_filter, grouping_cols, result_cols)
 
 df_name = 'CIFAR MachineAnimal Results -- No-SCAR'
-min_exp, max_exp = 0, 10
+min_exp, max_exp = 0, None
 methods_filter = ['Baseline', 'Baseline (orig)', 'OC-SVM', 'IsolationForest', 'ECODv2', r'$A^3$', 'EM']
-dataset_filter = ['CIFAR MachineAnimal']
+dataset_filter = 'CIFAR MachineAnimal'
 grouping_cols = ['c', 'Method']
 # result_cols = ['Accuracy', 'Precision', 'Recall', 'F1 score']
 result_cols = ['Accuracy', 'F1 score']
@@ -327,9 +329,9 @@ process_results(df_name, min_exp, max_exp, methods_filter, dataset_filter, group
 
 # https://arxiv.org/pdf/2106.03253.pdf, p. 12
 df_name = 'Gas Concentrations Results -- No-SCAR'
-min_exp, max_exp = 0, 10
+min_exp, max_exp = 0, None
 methods_filter = ['Baseline', 'Baseline (orig)', 'OC-SVM', 'IsolationForest', 'ECODv2', r'$A^3$', 'EM']
-dataset_filter = ['Gas Concentrations']
+dataset_filter = 'Gas Concentrations'
 grouping_cols = ['c', 'Method']
 # result_cols = ['Accuracy', 'Precision', 'Recall', 'F1 score']
 result_cols = ['Accuracy', 'F1 score']
@@ -337,9 +339,9 @@ result_cols = ['Accuracy', 'F1 score']
 process_results(df_name, min_exp, max_exp, methods_filter, dataset_filter, grouping_cols, result_cols)
 
 df_name = 'STL MachineAnimal Results -- No-SCAR'
-min_exp, max_exp = 0, 10
+min_exp, max_exp = 0, None
 methods_filter = ['Baseline', 'Baseline (orig)', 'OC-SVM', 'IsolationForest', 'ECODv2', r'$A^3$', 'EM']
-dataset_filter = ['STL MachineAnimal']
+dataset_filter = 'STL MachineAnimal'
 grouping_cols = ['c', 'Method']
 # result_cols = ['Accuracy', 'Precision', 'Recall', 'F1 score']
 result_cols = ['Accuracy', 'F1 score']
@@ -347,9 +349,9 @@ result_cols = ['Accuracy', 'F1 score']
 process_results(df_name, min_exp, max_exp, methods_filter, dataset_filter, grouping_cols, result_cols)
 
 df_name = 'STL MachineAnimal Results -- SCAR Setting'
-min_exp, max_exp = 0, 10
+min_exp, max_exp = 0, None
 methods_filter = ['Baseline', 'Baseline (orig)', 'OC-SVM', 'IsolationForest', 'ECODv2', r'$A^3$', 'EM']
-dataset_filter = ['STL MachineAnimal SCAR']
+dataset_filter = 'STL MachineAnimal SCAR'
 grouping_cols = ['c', 'Method']
 # result_cols = ['Accuracy', 'Precision', 'Recall', 'F1 score']
 result_cols = ['Accuracy', 'F1 score']
@@ -474,7 +476,7 @@ def process_time(df_name, min_exp, max_exp, \
         f.write(latex_table)
 
 df_name = 'Training Time per Dataset ($c = 0.5$)'
-min_exp, max_exp = 0, 101
+min_exp, max_exp = 0, None
 methods_filter = ['Baseline', 'Baseline (orig)', 'OC-SVM', 'IsolationForest', 'ECODv2', r'$A^3$', 'EM']
 dataset_filter = None
 grouping_cols = ['Dataset', 'Method']

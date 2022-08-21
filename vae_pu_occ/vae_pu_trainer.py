@@ -128,14 +128,14 @@ class VaePuTrainer():
                 print(f'Exp: {self.num_exp} / c = {self.config["base_label_frequency"]:.2f} / Epoch: {epoch + 1:4} |||| Remaining time (baseline): {(self.config["num_epoch"] - epoch) * (time.time() - start_time):.2f} sec')
             self.baseline_training_time = time.perf_counter() - self.baseline_training_start
 
-            acc_pre_occ, precision_pre_occ, recall_pre_occ, f1_pre_occ = self.model.accuracy(
-                self.DL_test)
+            self.acc_pre_occ, self.precision_pre_occ, self.recall_pre_occ, self.f1_pre_occ = \
+                self.model.accuracy(self.DL_test)
             metric_values = {
                 'Method': 'No OCC' if not self.use_original_paper_code else 'Baseline (orig)',
-                'Accuracy': acc_pre_occ,
-                'Precision': precision_pre_occ,
-                'Recall': recall_pre_occ,
-                'F1 score': f1_pre_occ,
+                'Accuracy': self.acc_pre_occ,
+                'Precision': self.precision_pre_occ,
+                'Recall': self.recall_pre_occ,
+                'F1 score': self.f1_pre_occ,
                 'Time': self.baseline_training_time
             }
             self._save_final_vae_pu_metric_values(metric_values)

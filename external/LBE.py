@@ -132,6 +132,25 @@ class LBE(nn.Module):
             P_y_hat_1 = torch.where(s == 1, eta, 1 - eta) * h
             P_y_hat_0 = torch.where(s == 1, 0, 1) * (1 - h)
 
+            # Fix for a rare case where real y = 1, predicted h(x) = 0.
+            # In that case P_y_hat_1 and P_y_hat_0 are 0, so later normalization
+            # returns NaN.
+            # P(y_i = 1|x_i, s_i) should be 1 in that case, introducing 
+            # non-zero value will fix that.
+            EPS = torch.tensor(1e-5).to(P_y_hat_1.device)
+            P_y_hat_1 = torch.where(
+                (h == 0) & (s == 1), 
+                EPS,
+                P_y_hat_1
+            )
+            # Analogously, when predicted h(x) = 1 and eta(x) = 1, but s = 0.
+            # P(y_i = 0|x_i, s_i) should be 1 in that case.
+            P_y_hat_0 = torch.where(
+                (h == 1) & (eta == 1) & (s == 0), 
+                EPS,
+                P_y_hat_0
+            )
+
             P_y_hat = torch.cat([P_y_hat_0.reshape(-1, 1), P_y_hat_1.reshape(-1, 1)], axis = 1)
             P_y_hat /= P_y_hat.sum(axis=1).reshape(-1, 1)
             return P_y_hat

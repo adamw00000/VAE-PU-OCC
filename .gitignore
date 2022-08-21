@@ -1,10 +1,11 @@
 __pycache__/
-env/
-pu_data/
-result/
-data/
-wyniki.zip
-processed_results/
+venv/
+result/*
+!result/.gitkeep
+data/*
+!data/.gitkeep
+processed_results/*
+!processed_results/.gitkeep
 datasets_preprocessing/
 plots/
 *.png
