@@ -13,15 +13,10 @@ from data_loading.vae_pu_dataloaders import create_vae_pu_adapter, get_dataset
 from external.LBE import train_LBE, eval_LBE
 from external.sar_experiment import SAREMThreadedExperiment
 
-# label_frequencies = [0.7, 0.5, 0.3, 0.1, 0.02]
-label_frequencies = [0.5]
-# label_frequencies = [0.7, 0.5, 0.3, 0.02]
-# label_frequencies = [0.3, 0.7]
-# label_frequencies = [0.02, 0.5]
+label_frequencies = [0.7, 0.5, 0.3, 0.1, 0.02]
 
-start_idx = 666
-num_experiments = 1
-epoch_multiplier = 1
+start_idx = 0
+num_experiments = 10
 
 config['data'] = 'MNIST 3v5'
 # config['data'] = 'CIFAR CarTruck'
@@ -32,6 +27,12 @@ config['data'] = 'MNIST 3v5'
 
 # config['data'] = 'STL MachineAnimal SCAR'
 
+config['training_mode'] = 'VAE-PU'
+# config['training_mode'] = 'SAR-EM'
+# config['training_mode'] = 'LBE'
+
+config['use_original_paper_code'] = False
+
 if 'SCAR' in config['data']:
     config['use_SCAR'] = True
 else:
@@ -39,16 +40,9 @@ else:
 
 config['occ_methods'] = ['OC-SVM', 'IsolationForest', 'ECODv2', 'A^3']
 
-config['use_original_paper_code'] = False
-# config['use_original_paper_code'] = True
+epoch_multiplier = 1
+
 config['use_old_models'] = True
-# config['use_old_models'] = False
-
-config['training_mode'] = 'VAE-PU'
-# config['training_mode'] = 'SAR-EM'
-# config['training_mode'] = 'LBE'
-
-
 config['train_occ'] = True
 config['occ_num_epoch'] = round(100 * epoch_multiplier)
 
@@ -180,7 +174,7 @@ for t in threads:
     t.join()
 
 # %%
-config['directory'] = './result/'+ config['data'] + '/Exp' + str(idx) + '/'
+config['directory'] = './result/'+ config['data'] + f'/{base_label_frequency}' + '/Exp' + str(idx) + '/'
 
 model = torch.load(config['directory'] + 'model.pt')
 # model = torch.load(config['directory'] + 'model_pre_occ.pt')

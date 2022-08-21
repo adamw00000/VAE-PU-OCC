@@ -31,7 +31,6 @@ for dataset in os.listdir(root):
 
                     metrics['Dataset'] = dataset
                     metrics['Experiment'] = exp_num
-                    # metrics['c'] = 0.5 if 20 > (exp_num % 20) >= 10 else 0.02
                     metrics['c'] = float(c)
                     
                     results.append(metrics)
@@ -42,7 +41,6 @@ for dataset in os.listdir(root):
 
                         metrics['Dataset'] = dataset
                         metrics['Experiment'] = exp_num
-                        # metrics['c'] = 0.5 if 20 > (exp_num % 20) >= 10 else 0.02
                         metrics['c'] = float(c)
                         
                         results.append(metrics)
@@ -53,7 +51,6 @@ for dataset in os.listdir(root):
 
                         metrics['Dataset'] = dataset
                         metrics['Experiment'] = exp_num
-                        # metrics['c'] = 0.5 if 20 > (exp_num % 20) >= 10 else 0.02
                         metrics['c'] = float(c)
                     
                         results.append(metrics)
@@ -65,7 +62,6 @@ for dataset in os.listdir(root):
 
                             metrics['Dataset'] = dataset
                             metrics['Experiment'] = exp_num
-                            # metrics['c'] = 0.5 if 20 > (exp_num % 20) >= 10 else 0.02
                             metrics['c'] = float(c)
                         
                             results.append(metrics)
@@ -180,9 +176,6 @@ def process_results(df_name, min_exp, max_exp, methods_filter, dataset_filter, g
 
     def highlight_max(df, value_df):
         is_max = value_df.groupby(level=0).transform('max').eq(value_df)
-
-        # max_df = pd.DataFrame(df, index=df.index, columns=df.columns)
-        # max_df = max_df.applymap(lambda a: f'{a:.2f}')
         max_df = pd.DataFrame(np.where(is_max == True, '\\textbf{' + df + '}', df),
             index=df.index, columns=df.columns)
         return max_df
@@ -213,9 +206,6 @@ def process_results(df_name, min_exp, max_exp, methods_filter, dataset_filter, g
     latex_table = re.sub(r'(EM.*? \\\\)', r'\1 \\cline{' \
         + str(cline_start) + '-' + str(cline_end) + \
     '}', latex_table)
-    # latex_table = re.sub(r'(Baseline.*? \\\\)', r'\1 \\cmidrule{' \
-    #     + str(cline_start) + '-' + str(cline_end) + \
-    # '}', latex_table)
 
     # merge headers
     def merge_headers(latex_table):
