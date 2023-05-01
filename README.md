@@ -1,10 +1,10 @@
 # VAE-PU+OCC: One-Class Classification Approach to Variational Learning from Biased Positive Unlabeled Data.
 
-Official implementation for VAE-PU+OCC. Will not be actively maintained.
+Official implementation for VAE-PU+OCC algorithm for Positive-Unlabeled classification.
 
-# How to run
+# How to run the experiments
 
-Using virtual environment is recommended (eg. create environment using `python -m venv venv` and activate in in Powershell using `. ./venv/Scripts/Activate.ps1`).
+Algorithm code was developed using Python 3.9. Using virtual environment is recommended (eg. create environment using `python -m venv venv` and activate it in Powershell using `. ./venv/Scripts/Activate.ps1`).
 
 1. Follow the steps in SAR-EM README.md in order to install the library, it is located under `external/SAR-EM` directory. Those steps are also listed below for convenience.
     - `pip install -r external/SAR-PU/requirements.txt`
@@ -20,7 +20,9 @@ Using virtual environment is recommended (eg. create environment using `python -
 
 ## VAE-PU+OCC
 
-Main module (VAE-PU and VAE-PU+OCC) implementation is contained in `vae_pu_occ/` directory, with `model.py` containing model code and two trainer files controlling the training process. The implementation is based on the scripts contained in the [official repository](https://github.com/wp03052/vae-pu).
+Main module (VAE-PU and VAE-PU+OCC) implementation is contained in `vae_pu_occ/` directory, with `model.py` containing model code and two trainer files controlling the training process. The implementation is based on the scripts contained in the [official VAE-PU repository](https://github.com/wp03052/vae-pu).
+
+Implementation of the VAE-PU+OCC enhancement itself, as well as comments explaining most important points of the algorithm, can be found in `vae_pu_occ/vae_pu_occ_trainer.py` file.
 
 ## Results
 

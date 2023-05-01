@@ -25,11 +25,14 @@ class VaePuOccTrainer(VaePuTrainer):
         super(VaePuOccTrainer, self).__init__(num_exp, model_config, pretrain)
 
     def train(self, vae_pu_data):
+        # Train VAE-PU model (encoder, decoder, target classifier, observation classifier and discriminator)
+        # For details, refer to vae_pu_occ/vae_pu_trainer.py
         super(VaePuOccTrainer, self).train(vae_pu_data)
 
         if not self.config['train_occ'] or self.use_original_paper_code:
             return
 
+        # Create deep copy of the model before further training
         self.modelOrig = copy.deepcopy(self.model)
         for occ_method in self.config['occ_methods']:
             print('Starting', occ_method)
@@ -41,11 +44,14 @@ class VaePuOccTrainer(VaePuTrainer):
             tf.random.set_seed(self.num_exp)
 
             pi_pl, pi_u, pi_pu = self.config['pi_pl'], self.config['pi_u'], self.config['pi_pu']
+            # Calculate estimated proportion p of PU samples in U corresponding to P(Y = 1|S = 0)
             pu_to_u_ratio = pi_pu / pi_u
 
+            # Generate pseudo-sample ̃x_{PU} using trained VAE
             x_pu_gen = self._generate_x_pu()
 
             if 'Clustering' not in occ_method:
+                # Train OCC classifier of choice on ̃x_{PU}
                 self._train_occ(occ_method, x_pu_gen)
 
             best_epoch = self.config['num_epoch']
@@ -61,15 +67,19 @@ class VaePuOccTrainer(VaePuTrainer):
                 if 'Clustering' in occ_method:
                     true_x_pu, pu_indices = self._select_true_x_pu_clustering(self.x_pl_full, self.x_u_full, pu_to_u_ratio, occ_method)
                 else:
+                    # Use OCC classifier to calculate marginal p-values for U dataset
+                    # and
+                    # Choose proportion p of all samples in χ_{PU} with the highest p-values in U as the candidate PU sample
                     true_x_pu, pu_indices = self._select_true_x_pu_occ(self.x_u_full, pu_to_u_ratio)
                 
+                # Update VAE-PU target classifier with the risk function \hat{R}(g) and candidate PU sample
                 targetClassifierLoss = self.model.train_step_pn_true_x_pu(self.x_pl_full, self.x_u_full, true_x_pu, pi_pl, pi_u, pi_pu)
                 targetLosses.append(targetClassifierLoss)
 
                 occ_metrics, val_metrics = self._calculate_occ_metrics(epoch, occ_method, pu_indices, targetLosses)
                 val_acc, _, _, val_f1 = val_metrics
 
-                # best f1 early stopping
+                # Best f1 early stopping
                 if val_f1 >= best_f1:
                     best_f1 = val_f1
                     best_acc = val_acc
@@ -87,11 +97,10 @@ class VaePuOccTrainer(VaePuTrainer):
                         print(f'Early stopping | Best model epoch: {best_epoch + 1}, f1: {best_f1:.4f}, acc: {best_acc:.4f}')
                         print('')
                         break
-
+            
+            # Calculate and save metrics
             self.occ_training_time = time.perf_counter() - self.occ_training_start
             self._save_vae_pu_occ_metrics(occ_method, occ_metrics, best_epoch)
-
-        # # OCC training end
 
         if not self.use_original_paper_code:
             self._save_results()
@@ -146,11 +155,12 @@ class VaePuOccTrainer(VaePuTrainer):
         return self.cc
 
     def _select_true_x_pu_occ(self, x_u, pu_to_u_ratio):
+        # Use OCC classifier to calculate marginal p-values for U dataset
         pvals_one_class = self.cc.predict(x_u.cpu().numpy(), delta=0.05, simes_kden=2)
         pvals = pvals_one_class['Marginal']
         pvals = torch.from_numpy(pvals).to(self.config['device'])
 
-        # Order approach
+        # Choose proportion p of all samples in χ_{PU} with the highest p-values in U as the candidate PU sample
         sorted_indices = torch.argsort(pvals, descending=True)
         n_pu_samples = round(pu_to_u_ratio * len(x_u))
         pu_indices = sorted_indices[:n_pu_samples]
