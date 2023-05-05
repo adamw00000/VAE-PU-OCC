@@ -276,27 +276,6 @@ def process_results(
             regex=".*Baseline \(orig\).*", axis=0
         ).droplevel(1, axis=0)
 
-        non_occ_mean = processed_results.filter(
-            regex=".*(LBE|SAR-EM|Baseline|Baseline \(orig\)).*", axis=0
-        )
-        non_occ_sem = processed_results_sem.filter(
-            regex=".*(LBE|SAR-EM|Baseline|Baseline \(orig\)).*", axis=0
-        )
-        non_occ_counts = counts.filter(
-            regex=".*(LBE|SAR-EM|Baseline|Baseline \(orig\)).*", axis=0
-        )
-
-        non_occ_max_idx = non_occ_mean.groupby(["c"]).idxmax()
-        best_non_occ_mean = non_occ_max_idx.apply(
-            lambda col: non_occ_mean.loc[col, col.name].groupby("c").max()
-        )
-        sem_of_best_non_occ = non_occ_max_idx.apply(
-            lambda col: non_occ_sem.loc[col, col.name].groupby("c").max()
-        )
-        counts_of_best_non_occ = non_occ_max_idx.apply(
-            lambda col: non_occ_counts.loc[col, col.name].groupby("c").max()
-        )
-
         occ_mean = processed_results.filter(
             regex=".*(\$A\^3\$|IsolationForest|ECODv2|OC-SVM).*", axis=0
         )
@@ -305,32 +284,6 @@ def process_results(
         )
         occ_counts = counts.filter(
             regex=".*(\$A\^3\$|IsolationForest|ECODv2|OC-SVM).*", axis=0
-        )
-
-        max_idx = occ_mean.groupby(["c"]).idxmax()
-        best_occ_mean = max_idx.apply(
-            lambda col: occ_mean.loc[col, col.name].groupby("c").max()
-        )
-        sem_of_best_occ = max_idx.apply(
-            lambda col: occ_sem.loc[col, col.name].groupby("c").max()
-        )
-        counts_of_best_occ = max_idx.apply(
-            lambda col: occ_counts.loc[col, col.name].groupby("c").max()
-        )
-
-        #   best OCC variant
-        t = (best_occ_mean - baseline_mean) / (
-            sem_of_best_occ**2 + baseline_sem**2
-        ) ** (0.5)
-        t_test_p_vals = 1 - scipy.stats.t.cdf(
-            t, df=baseline_counts + counts_of_best_occ - 2
-        )
-
-        best_occ_vs_baseline_t_test = pd.DataFrame(
-            t_test_p_vals, index=best_occ_mean.index, columns=best_occ_mean.columns
-        )
-        best_occ_vs_baseline_t_test.round(2).to_csv(
-            f"best_occ_vs_baseline-{metric}.csv"
         )
 
         #   p-value per variant
@@ -342,19 +295,36 @@ def process_results(
         )
         all_occ_vs_baseline_t_test.round(2).to_csv(f"all_occ_vs_baseline-{metric}.csv")
 
-        #   p-value vs best non-OCC
-        t = (occ_mean - best_non_occ_mean) / (
-            occ_sem**2 + sem_of_best_non_occ**2
-        ) ** (0.5)
-        t_test_p_vals = 1 - scipy.stats.t.cdf(
-            t, df=counts_of_best_non_occ + occ_counts - 2
-        )
+        # P-VALUE TABLE
 
-        all_occ_vs_best_other_t_test = pd.DataFrame(
-            t_test_p_vals, index=occ_mean.index, columns=occ_mean.columns
-        )
-        all_occ_vs_best_other_t_test.round(2).to_csv(
-            f"all_occ_vs_best_other-{metric}.csv"
+        selected_test = all_occ_vs_baseline_t_test
+
+        def get_checkmark_col_from_p_vals(selected_test):
+            checkmark_column = np.where(
+                selected_test == -1,
+                " \\phantom{\\checkmark}",
+                np.where(
+                    selected_test <= 0.05,
+                    " \\textcolor{ForestGreen}{\\checkmark}",
+                    np.where(
+                        selected_test >= 0.95,
+                        " $\\textcolor{magenta}{\\times}$",
+                        " $\\textcolor{black}{-}$",
+                    ),
+                ),
+            )
+
+            return checkmark_column
+
+        p_val_display_df = pd.DataFrame(
+            np.where(
+                selected_test.round(2) == 0,
+                "< 0.01",
+                selected_test.applymap("{:.2f}".format),
+            )
+            + get_checkmark_col_from_p_vals(selected_test),
+            index=selected_test.index,
+            columns=selected_test.columns,
         )
 
         # # PREPARE RESULT TABLES
@@ -373,28 +343,70 @@ def process_results(
             )
             return max_df
 
-        processed_results_text = (
-            processed_results.applymap(lambda a: f"{a:.2f}")
+        for c, method in processed_results.index.unique():
+            if (c, method) not in selected_test.index:
+                selected_test.loc[(c, method), :] = -1
+        selected_test = selected_test.sort_index()
+
+        processed_results_value_string = (
+            +processed_results.applymap(lambda a: f"{a:.2f}")
             + " $\pm$ "
             + processed_results_sem.applymap(lambda a: f"{a:.2f}")
         )
-        processed_results = highlight_max(processed_results_text, processed_results)
+        processed_results = highlight_max(
+            processed_results_value_string, processed_results
+        )
+
+        checkmark_column = np.where(
+            selected_test == -1,
+            " \\phantom{\\checkmark}",
+            np.where(
+                selected_test <= 0.05,
+                " \\textcolor{ForestGreen}{\\checkmark}",
+                np.where(
+                    selected_test >= 0.95,
+                    " $\\textcolor{magenta}{\\times}$",
+                    " $\\textcolor{black}{-}$",
+                ),
+            ),
+        )
+        processed_results = processed_results + get_checkmark_col_from_p_vals(
+            selected_test
+        )
 
         include_caption = True
         include_label = True
 
-        latex_table = processed_results.to_latex(
-            index=True,
-            escape=False,
-            multirow=True,
-            caption=f"{metric} values per dataset." if include_caption else None,
-            label="tab:" + metric.replace(" ", "_") if include_label else None,
-            position=None
-            if not include_label and not include_caption
-            else "tbp"
-            if not multicolumn
-            else "btp",
-        )
+        with pd.option_context("max_colwidth", 9999):
+            latex_table = processed_results.to_latex(
+                index=True,
+                escape=False,
+                multirow=True,
+                caption=f"{metric} values per dataset. "
+                "Green ticks correspond to the cases when $t$-test rejected equality of "
+                + (
+                    "accuracies"
+                    if metric == "Accuracy"
+                    else (
+                        "F1 scores"
+                        if metric == "F1 score"
+                        else ("precisions" if metric == "Precision" else "recalls")
+                    )
+                )
+                + " "
+                "of the VAE-PU-OCC method considered and that of the baseline original method in favor of "
+                "the former one at $\\alpha=0.05$. "
+                "Dashes indicate the failure to reject "
+                "(see appendix~\\ref{appendix:p-values})."
+                if include_caption
+                else None,
+                label="tab:" + metric.replace(" ", "_") if include_label else None,
+                position=None
+                if not include_label and not include_caption
+                else "tbp"
+                if not multicolumn
+                else "btp",
+            )
         cline_start = len(processed_results.index.names)
         cline_end = cline_start + len(processed_results.columns)
 
@@ -418,7 +430,7 @@ def process_results(
         # '}', latex_table)
 
         # merge headers
-        def merge_headers(latex_table):
+        def merge_headers(latex_table, scaling):
             table_lines = latex_table.split("\n")
             tabular_start = 0
             tabular_end = len(table_lines) - 3
@@ -470,7 +482,7 @@ def process_results(
 
             return "\n".join(table_lines)
 
-        latex_table = merge_headers(latex_table)
+        latex_table = merge_headers(latex_table, scaling=scaling)
 
         if multicolumn:
             latex_table = latex_table.replace("{table}", "{table*}")
@@ -491,6 +503,45 @@ def process_results(
 
         print(f"{metric} df")
         display(processed_results)
+
+        # SAVE P-VALS TABLE
+
+        with pd.option_context("max_colwidth", 9999):
+            p_val_display_df.columns.name = None
+            p_val_table = p_val_display_df.to_latex(
+                index=True,
+                escape=False,
+                multirow=True,
+                caption=f"T-test $p$-values for {metric} per dataset."
+                if include_caption
+                else None,
+                label="tab:p-val-" + metric.replace(" ", "_")
+                if include_label
+                else None,
+                position=None
+                if not include_label and not include_caption
+                else "tb"
+                if not multicolumn
+                else "bt",
+            )
+
+        p_val_table = merge_headers(p_val_table, scaling=1)
+        if multicolumn:
+            p_val_table = p_val_table.replace("{table}", "{table*}")
+        p_val_table = p_val_table.replace(
+            "\\centering",
+            "\\centering \\scriptsize \\renewcommand{\\arraystretch}{1.2}",
+        )
+
+        with open(
+            os.path.join("processed_results", "Metrics", f"{metric}-p-vals.tex"), "w"
+        ) as f:
+            f.write(p_val_table)
+        with open(
+            os.path.join("processed_results", "_all_tables", f"{metric}-p-vals.tex"),
+            "w",
+        ) as f:
+            f.write(p_val_table)
 
 
 ### ---------------------------------------------------------
