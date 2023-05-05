@@ -249,11 +249,112 @@ def process_results(
             ).round(4)
             * 100
         )
+        counts = filtered_df.pivot_table(
+            values=metric,
+            index=["c", "Method"],
+            columns="Dataset",
+            aggfunc="count",
+        )
 
         os.makedirs(os.path.join("processed_results", "Metrics"), exist_ok=True)
         os.makedirs(os.path.join("processed_results", "_all_tables"), exist_ok=True)
         processed_results.to_csv(
             os.path.join("processed_results", "Metrics", f"{metric}.csv")
+        )
+
+        # STATISTICAL TESTS
+
+        import scipy.stats
+
+        baseline_mean = processed_results.filter(
+            regex=".*Baseline \(orig\).*", axis=0
+        ).droplevel(1, axis=0)
+        baseline_sem = processed_results_sem.filter(
+            regex=".*Baseline \(orig\).*", axis=0
+        ).droplevel(1, axis=0)
+        baseline_counts = counts.filter(
+            regex=".*Baseline \(orig\).*", axis=0
+        ).droplevel(1, axis=0)
+
+        non_occ_mean = processed_results.filter(
+            regex=".*(LBE|SAR-EM|Baseline|Baseline \(orig\)).*", axis=0
+        )
+        non_occ_sem = processed_results_sem.filter(
+            regex=".*(LBE|SAR-EM|Baseline|Baseline \(orig\)).*", axis=0
+        )
+        non_occ_counts = counts.filter(
+            regex=".*(LBE|SAR-EM|Baseline|Baseline \(orig\)).*", axis=0
+        )
+
+        non_occ_max_idx = non_occ_mean.groupby(["c"]).idxmax()
+        best_non_occ_mean = non_occ_max_idx.apply(
+            lambda col: non_occ_mean.loc[col, col.name].groupby("c").max()
+        )
+        sem_of_best_non_occ = non_occ_max_idx.apply(
+            lambda col: non_occ_sem.loc[col, col.name].groupby("c").max()
+        )
+        counts_of_best_non_occ = non_occ_max_idx.apply(
+            lambda col: non_occ_counts.loc[col, col.name].groupby("c").max()
+        )
+
+        occ_mean = processed_results.filter(
+            regex=".*(\$A\^3\$|IsolationForest|ECODv2|OC-SVM).*", axis=0
+        )
+        occ_sem = processed_results_sem.filter(
+            regex=".*(\$A\^3\$|IsolationForest|ECODv2|OC-SVM).*", axis=0
+        )
+        occ_counts = counts.filter(
+            regex=".*(\$A\^3\$|IsolationForest|ECODv2|OC-SVM).*", axis=0
+        )
+
+        max_idx = occ_mean.groupby(["c"]).idxmax()
+        best_occ_mean = max_idx.apply(
+            lambda col: occ_mean.loc[col, col.name].groupby("c").max()
+        )
+        sem_of_best_occ = max_idx.apply(
+            lambda col: occ_sem.loc[col, col.name].groupby("c").max()
+        )
+        counts_of_best_occ = max_idx.apply(
+            lambda col: occ_counts.loc[col, col.name].groupby("c").max()
+        )
+
+        #   best OCC variant
+        t = (best_occ_mean - baseline_mean) / (
+            sem_of_best_occ**2 + baseline_sem**2
+        ) ** (0.5)
+        t_test_p_vals = 1 - scipy.stats.t.cdf(
+            t, df=baseline_counts + counts_of_best_occ - 2
+        )
+
+        best_occ_vs_baseline_t_test = pd.DataFrame(
+            t_test_p_vals, index=best_occ_mean.index, columns=best_occ_mean.columns
+        )
+        best_occ_vs_baseline_t_test.round(2).to_csv(
+            f"best_occ_vs_baseline-{metric}.csv"
+        )
+
+        #   p-value per variant
+        t = (occ_mean - baseline_mean) / (occ_sem**2 + baseline_sem**2) ** (0.5)
+        t_test_p_vals = 1 - scipy.stats.t.cdf(t, df=baseline_counts + occ_counts - 2)
+
+        all_occ_vs_baseline_t_test = pd.DataFrame(
+            t_test_p_vals, index=occ_mean.index, columns=occ_mean.columns
+        )
+        all_occ_vs_baseline_t_test.round(2).to_csv(f"all_occ_vs_baseline-{metric}.csv")
+
+        #   p-value vs best non-OCC
+        t = (occ_mean - best_non_occ_mean) / (
+            occ_sem**2 + sem_of_best_non_occ**2
+        ) ** (0.5)
+        t_test_p_vals = 1 - scipy.stats.t.cdf(
+            t, df=counts_of_best_non_occ + occ_counts - 2
+        )
+
+        all_occ_vs_best_other_t_test = pd.DataFrame(
+            t_test_p_vals, index=occ_mean.index, columns=occ_mean.columns
+        )
+        all_occ_vs_best_other_t_test.round(2).to_csv(
+            f"all_occ_vs_best_other-{metric}.csv"
         )
 
         # # PREPARE RESULT TABLES
