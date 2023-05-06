@@ -293,7 +293,9 @@ def process_results(
         all_occ_vs_baseline_t_test = pd.DataFrame(
             t_test_p_vals, index=occ_mean.index, columns=occ_mean.columns
         )
-        all_occ_vs_baseline_t_test.round(2).to_csv(f"all_occ_vs_baseline-{metric}.csv")
+        all_occ_vs_baseline_t_test.round(2).to_csv(
+            os.path.join("processed_results", "Metrics", f"{metric}-p-vals.csv")
+        )
 
         # P-VALUE TABLE
 
@@ -383,7 +385,7 @@ def process_results(
                 escape=False,
                 multirow=True,
                 caption=f"{metric} values per dataset. "
-                "Green ticks correspond to the cases when $t$-test rejected equality of "
+                "Green ticks (,,\\textcolor{ForestGreen}{\\checkmark}'') correspond to the cases when $t$-test rejected equality of "
                 + (
                     "accuracies"
                     if metric == "Accuracy"
@@ -396,7 +398,7 @@ def process_results(
                 + " "
                 "of the VAE-PU-OCC method considered and that of the baseline original method in favor of "
                 "the former one at $\\alpha=0.05$. "
-                "Dashes indicate the failure to reject "
+                "Dashes (,,$\\textcolor{black}{-}$'') indicate the failure to reject "
                 "(see appendix~\\ref{appendix:p-values})."
                 if include_caption
                 else None,
